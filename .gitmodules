@@ -1,0 +1,3 @@
+[submodule "third/spdlog-easy"]
+	path = third/spdlog-easy
+	url = https://github.com/gwankyun/spdlog-easy.git

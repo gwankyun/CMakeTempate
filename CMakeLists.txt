@@ -24,8 +24,10 @@ set_target_properties(main PROPERTIES DEBUG_POSTFIX "_debug")
 add_definitions(/W4 /MP)
 
 # 頭文件目錄
-# target_include_directories(main
-# )
+target_include_directories(main
+        PRIVATE
+        third/spdlog-easy/include
+)
 
 # target_link_directories(main
 # )
