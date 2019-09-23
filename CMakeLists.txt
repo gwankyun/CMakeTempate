@@ -31,20 +31,22 @@ foreach(item ${project_list})
 	target_include_directories(${item} PRIVATE ${spdlog_easy})
 endforeach()
 
-# 生成執行文件
-add_executable(main "")
+set(EXE main)
 
-target_sources(main 
+# 生成執行文件
+add_executable(${EXE} "")
+
+target_sources(${EXE} 
         PRIVATE
         src/main.cpp
 )
 
-set_target_properties(main PROPERTIES DEBUG_POSTFIX "_debug")
+set_target_properties(${EXE} PROPERTIES DEBUG_POSTFIX "_debug")
 
 add_definitions(/W4 /MP)
 
 # 頭文件目錄
-target_include_directories(main
+target_include_directories(${EXE}
         PRIVATE
         third/spdlog-easy/include
 )
@@ -52,4 +54,5 @@ target_include_directories(main
 # target_link_directories(main
 # )
 
-target_link_libraries(main ${project_list})
+# 項目依賴
+target_link_libraries(${EXE} ${project_list})
