@@ -35,6 +35,8 @@ foreach(item ${project_list})
 		PRIVATE ${srcs}
 	)
 	target_include_directories(${item} PRIVATE third/spdlog-easy/include)
+	# 工程分目錄
+	set_property(TARGET ${item} PROPERTY FOLDER ${EXE})
 endforeach()
 
 # 生成執行文件
