@@ -9,8 +9,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(common)
 
 # 輸出目錄
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 # 項目名
 project(CMakeTemplate)
@@ -42,7 +41,8 @@ target_sources(${EXE}
         src/main.cpp
 )
 
-set_target_properties(${EXE} PROPERTIES DEBUG_POSTFIX "_debug")
+# 調試版本後綴名
+# set_target_properties(${EXE} PROPERTIES DEBUG_POSTFIX "_debug")
 
 add_definitions(/W4 /MP)
 
