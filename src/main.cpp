@@ -10,5 +10,6 @@ int main()
     LOG(info, "test");
     A a;
     B b;
+    a.run();
     return EXIT_SUCCESS;
 }

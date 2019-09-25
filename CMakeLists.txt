@@ -34,7 +34,7 @@ foreach(item ${project_list})
 	target_sources(${item} 
 		PRIVATE ${srcs}
 	)
-	target_include_directories(${item} PRIVATE ${spdlog_easy})
+	target_include_directories(${item} PRIVATE third/spdlog-easy/include)
 endforeach()
 
 # 生成執行文件
