@@ -15,23 +15,24 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 # 項目名
 project(CMakeTemplate)
 
+# 可執行文件名
+set(EXE main)
+
 set(project_list)
 get_project_list(project_list src)
-list(REMOVE_ITEM project_list main)
-message("list:" ${project_list})
+list(REMOVE_ITEM project_list ${EXE})
+message("src: " "${project_list}")
 
 foreach(item ${project_list})
 	add_library(${item} "")
 	set(srcs)
 	get_source_list(srcs ${CMAKE_CURRENT_SOURCE_DIR}/src/${item})
-	message(${item} ":" ${${srcs}})
+	message(${item} ": " "${srcs}")
 	target_sources(${item} 
 		PRIVATE ${srcs}
 	)
 	target_include_directories(${item} PRIVATE ${spdlog_easy})
 endforeach()
-
-set(EXE main)
 
 # 生成執行文件
 add_executable(${EXE} "")
