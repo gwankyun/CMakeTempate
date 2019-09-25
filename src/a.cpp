@@ -24,5 +24,5 @@ A::A()
 
 void A::run()
 {
-    impl->run();    
+    impl->run();
 }
