@@ -41,45 +41,85 @@ message("map_clear: " "${m_key}")
 # 可執行文件名
 set(EXE main)
 
-set(project_list)
-get_project_list(project_list src)
-list(REMOVE_ITEM project_list ${EXE})
-message("src: " "${project_list}")
+set(MAIN_DIR src)
+set(MAIN_FILE main)
 
-foreach(item ${project_list})
-	add_library(${item} "")
-	set(srcs)
-	get_source_list(srcs ${CMAKE_CURRENT_SOURCE_DIR}/src/${item})
-	message(${item} ": " "${srcs}")
-	target_sources(${item} 
-		PRIVATE ${srcs}
-	)
-	target_include_directories(${item} PRIVATE third/spdlog-easy/include)
-	# 工程分目錄
-	set_property(TARGET ${item} PROPERTY FOLDER ${EXE})
+function(get_library _src _out)
+	file(GLOB srcs ${_src}/*)
+	set(out)
+	foreach(item ${srcs})
+		get_filename_component(name_we ${item} NAME_WE)
+		list(APPEND out ${name_we})
+	endforeach()
+	list(REMOVE_DUPLICATES out)
+	set(${_out} ${out} PARENT_SCOPE)
+endfunction()
+
+set(project_list)
+
+file(GLOB_RECURSE srcs src/*.cpp)
+foreach(item ${srcs})
+	get_filename_component(dir ${item} DIRECTORY)
+	get_filename_component(name_we ${item} NAME_WE)
+	get_filename_component(dir_name ${dir} NAME)
+	list(APPEND project_list ${dir})
+	string(COMPARE NOTEQUAL ${dir_name} ${name_we} a)
+	string(COMPARE NOTEQUAL ${MAIN_FILE} ${name_we} b)
+	if(a AND b)
+		list(APPEND project_list ${dir}/${name_we})		
+	endif()
 endforeach()
 
-# 生成執行文件
-add_executable(${EXE} "")
+function(get_folder _src _name _out)
+	string(REGEX MATCH "(${MAIN_DIR}/.*)${_name}.*$" m ${_src})
+	set(out ${CMAKE_MATCH_1})
+	string(REGEX REPLACE "/([a-z]+)/" "/\\1_/" out ${out})
+	set(${_out} ${out} PARENT_SCOPE)
+endfunction()
 
-target_sources(${EXE} 
-        PRIVATE
-        src/main.cpp
-)
+list(REMOVE_DUPLICATES project_list)
+message("project_list: ${project_list}")
+foreach(item ${project_list})
+	get_filename_component(name ${item} NAME)
+	get_filename_component(dir ${item} DIRECTORY)
+	get_filename_component(dir_name ${dir} NAME)
+	set(proj)
+	set(src)
+	set(lib)
+	if(${name} STREQUAL ${MAIN_DIR})
+		set(proj ${EXE})
+		add_executable(${proj} "")
+		set(src ${MAIN_DIR}/${MAIN_FILE}.cpp)
+		get_library(${item} lib)
+		list(REMOVE_ITEM lib ${MAIN_FILE})
+	else()
+		add_library(${name} "")
+		set(proj ${name})
+		if(IS_DIRECTORY ${item})
+			file(GLOB src ${item}/${name}.*)
+			get_library(${item} lib)
+			list(REMOVE_ITEM lib ${name})
+		else()
+			file(GLOB src ${item}.*)
+		endif()
+		get_folder(${item} ${name} folder)
+		set_property(TARGET ${name} PROPERTY FOLDER ${folder})
+	endif()
+	message("proj:" ${proj})
+	message("src: ${src}")
+	message("lib: ${lib}")
+	target_sources(${proj}
+		PRIVATE ${src}
+	)
+	target_include_directories(${proj} 
+		PRIVATE
+			third/spdlog-easy/third/spdlog/include
+			third/spdlog-easy/include
+	)
+	target_link_libraries(${proj} ${lib})
+endforeach()
 
 # 調試版本後綴名
 # set_target_properties(${EXE} PROPERTIES DEBUG_POSTFIX "_debug")
 
 add_definitions(/W4 /MP)
-
-# 頭文件目錄
-target_include_directories(${EXE}
-        PRIVATE
-        third/spdlog-easy/include
-)
-
-# target_link_directories(main
-# )
-
-# 項目依賴
-target_link_libraries(${EXE} ${project_list})
