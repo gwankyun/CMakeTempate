@@ -163,4 +163,6 @@ endforeach()
 # 調試版本後綴名
 # set_target_properties(${EXE} PROPERTIES DEBUG_POSTFIX "_debug")
 
-add_definitions(/W4 /MP)
+if(${MSVC})
+	add_definitions(/W4 /MP)
+endif()
