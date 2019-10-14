@@ -19,25 +19,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 # 項目名
 project(CMakeTemplate)
 
-map_create(m)
-map_add(m a 1)
-message("map_add: " "${m_key}")
-map_get(m a r)
-message("map_get: " ${r})
-map_size(m r)
-message("map_size: " ${r})
-map_contain(m a r)
-message("map_contain: " ${r})
-map_contain(m b r)
-message("map_contain: " ${r})
-map_remove(m a)
-message("map_remove: " "${m_key}")
-map_add(m a 1)
-map_add(m b 2)
-map_add(m c 3)
-map_clear(m)
-message("map_clear: " "${m_key}")
-
 # 可執行文件名
 set(EXE main)
 
