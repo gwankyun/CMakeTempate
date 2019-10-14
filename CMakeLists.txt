@@ -55,6 +55,38 @@ function(get_library _src _out)
 	set(${_out} ${out} PARENT_SCOPE)
 endfunction()
 
+function(get_filename_component_list _var _FileNameList _mode)
+	set(out)
+	foreach(item ${_FileNameList})
+		get_filename_component(result ${item} ${_mode})
+		list(APPEND out ${result})
+	endforeach()
+	set(${_var} ${out} PARENT_SCOPE)
+endfunction()
+
+function(string_regex_replace_all _regular _replace _output _input)
+	string(REGEX REPLACE ${_regular} ${_replace} out ${_input})
+	string(COMPARE NOTEQUAL ${_input} ${out} r)
+	while(${r})
+		set(_input ${out})
+		string(REGEX REPLACE ${_regular} ${_replace} out ${input})
+		string(COMPARE NOTEQUAL ${_input} ${out} r)
+	endwhile()
+	set(${_output} ${out} PARENT_SCOPE)
+endfunction()
+
+function(update_folder _folder _var)
+	if(${MSVC_VERSION} GREATER_EQUAL 1920)
+		set(${_var} ${_folder} PARENT_SCOPE)
+	else()
+		string(REGEX REPLACE "^([a-z]+)/" "\\1_/" _folder ${_folder})
+		string(REGEX REPLACE "/([a-z]+)$" "/\\1_" _folder ${_folder})
+		string_regex_replace_all("/([a-z]+)/" "/\\1_/" out ${_folder})
+		set(_folder ${out})
+		set(${_var} ${_folder} PARENT_SCOPE)
+	endif()
+endfunction()
+
 set(project_list)
 
 macro(log _message)
@@ -77,12 +109,14 @@ endfunction()
 file(GLOB_RECURSE projects src/*)
 message_list("${projects}")
 message("")
-set(dir_list)
-foreach(item ${projects})
-	get_filename_component(dir ${item} DIRECTORY)
-	list(APPEND dir_list ${dir})
-endforeach()
+get_filename_component_list(dir_list "${projects}" DIRECTORY)
 list(REMOVE_DUPLICATES dir_list)
+
+set(inc_dir
+	third/spdlog-easy/third/spdlog/include
+	third/spdlog-easy/include
+)
+
 foreach(item ${dir_list})
 	message(${item})
 	file(GLOB current ${item}/* ${item}/*.cpp)
@@ -91,12 +125,8 @@ foreach(item ${dir_list})
 	message("name: " ${name})
 	message(" ${current}")
 	set(lib)
-	foreach(i ${current})
-		get_filename_component(dname ${i} NAME_WE)
-		list(APPEND lib ${dname})
-	endforeach()
+	get_filename_component_list(lib " ${current}" NAME_WE)
 	list(REMOVE_DUPLICATES lib)
-	message(" lib: ${lib}")
 	set(proj)
 	set(src)
 	list(FIND lib main out)
@@ -104,58 +134,47 @@ foreach(item ${dir_list})
 		set(proj main)
 		message(" main")
 		add_executable(${proj} "")
-		set(src ${item}/main.cpp)
 	else()
 		set(proj ${name})
 		message(" sub")
 		add_library(${proj} "")
-		# message(" lib name: " ${name})
-		set(src ${item}/${proj}.cpp ${item}/${proj}.h)
 
-		message(" name: " ${name})
-		message(" lib: ${lib}")
-		get_filename_component(dir ${item} DIRECTORY)
-		get_filename_component(dir_name ${dir} NAME)
-		get_folder(${item} ${proj} folder)
+		string(REGEX MATCH "(${MAIN_DIR}/.*)${proj}.*$" _ ${item})
+		set(folder ${CMAKE_MATCH_1})
+		update_folder(${folder} folder)
+		message(" folder: " ${folder})
 		set_property(TARGET ${proj} PROPERTY FOLDER ${folder})
 	endif()
 
 	list(REMOVE_ITEM lib ${proj})
+	file(GLOB src ${item}/${proj}.*)
+	list(REMOVE_ITEM lib ${proj})
+
 	target_link_libraries(${proj} ${lib})
-
-	target_sources(${proj}
-		PRIVATE ${src}
-	)
-
-	target_include_directories(${proj}
-		PRIVATE
-			third/spdlog-easy/third/spdlog/include
-			third/spdlog-easy/include
-	)
+	target_sources(${proj} PRIVATE ${src})
+	target_include_directories(${proj} PRIVATE ${inc_dir})
 
 	message(" lib: ${lib}")
 
 	foreach(i ${lib})
 		if(NOT (IS_DIRECTORY ${item}/${i}))
-			message(" other lib: " ${i})
-			add_library(${i} "")
-			set(src ${item}/${i}.cpp ${item}/${i}.h)
-			target_sources(${i}
-				PRIVATE ${src}
-			)
-			target_include_directories(${i}
-				PRIVATE
-					third/spdlog-easy/third/spdlog/include
-					third/spdlog-easy/include
-			)
+			set(proj ${i})
+			message(" standone lib: " ${i})
+			add_library(${proj} "")
+			file(GLOB src ${item}/${proj}.*)
 
+			set(folder)
 			if(${name} STREQUAL src)
-				set_property(TARGET ${i} PROPERTY FOLDER ${name})
+				set(folder ${name}_)
 			else()
-				string(REGEX MATCH "(${MAIN_DIR}/.*)$" m ${item})
-				set(out ${CMAKE_MATCH_1})
-				set_property(TARGET ${i} PROPERTY FOLDER ${out})
+				string(REGEX MATCH "(${MAIN_DIR}/.*)$" _ ${item})
+				set(folder ${CMAKE_MATCH_1})
+				update_folder(${folder} folder)
 			endif()
+
+			target_sources(${proj} PRIVATE ${src})
+			target_include_directories(${proj} PRIVATE ${inc_dir})
+			set_property(TARGET ${proj} PROPERTY FOLDER ${folder})
 		endif()
 	endforeach()
 endforeach()
