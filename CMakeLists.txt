@@ -44,17 +44,6 @@ set(EXE main)
 set(MAIN_DIR src)
 set(MAIN_FILE main)
 
-function(get_library _src _out)
-	file(GLOB srcs ${_src}/*)
-	set(out)
-	foreach(item ${srcs})
-		get_filename_component(name_we ${item} NAME_WE)
-		list(APPEND out ${name_we})
-	endforeach()
-	list(REMOVE_DUPLICATES out)
-	set(${_out} ${out} PARENT_SCOPE)
-endfunction()
-
 function(get_filename_component_list _var _FileNameList _mode)
 	set(out)
 	foreach(item ${_FileNameList})
@@ -88,28 +77,8 @@ function(update_folder _folder _var)
 endfunction()
 
 set(project_list)
-
-macro(log _message)
-	message("${CMAKE_CURRENT_LIST_LINE}: " ${_message})
-endmacro()
-
-function(message_list _list)
-	foreach(item ${_list})
-		message(${item})
-	endforeach()
-endfunction()
-
-function(get_folder _src _name _out)
-	string(REGEX MATCH "(${MAIN_DIR}/.*)${_name}.*$" m ${_src})
-	set(out ${CMAKE_MATCH_1})
-	string(REGEX REPLACE "/([a-z]+)/" "/\\1_/" out ${out})
-	set(${_out} ${out} PARENT_SCOPE)
-endfunction()
-
-file(GLOB_RECURSE projects src/*)
-message_list("${projects}")
-message("")
-get_filename_component_list(dir_list "${projects}" DIRECTORY)
+file(GLOB_RECURSE project_list src/*)
+get_filename_component_list(dir_list "${project_list}" DIRECTORY)
 list(REMOVE_DUPLICATES dir_list)
 
 set(inc_dir
