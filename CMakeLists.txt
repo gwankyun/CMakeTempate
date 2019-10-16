@@ -61,9 +61,14 @@ file(GLOB_RECURSE project_list src/*)
 get_filename_component_list(dir_list "${project_list}" DIRECTORY)
 list(REMOVE_DUPLICATES dir_list)
 
+find_package(SPDLOG_EASY)
+
+if(SPDLOG_EASY_FOUND)
+	message("found")
+endif()
+
 set(inc_dir
-	third/spdlog-easy/third/spdlog/include
-	third/spdlog-easy/include
+	${SPDLOG_EASY_INCLUDE_DIR}
 )
 
 foreach(item ${dir_list})
