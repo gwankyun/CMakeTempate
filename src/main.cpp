@@ -3,6 +3,8 @@
 #include <spdlog_easy.hpp>
 #include "a.h"
 #include "b/b.h"
+#include <boost/filesystem.hpp>
+using namespace std;
 
 int main()
 {
@@ -11,5 +13,6 @@ int main()
     A a;
     B b;
     a.run();
+    cout << boost::filesystem::current_path() << endl;
     return EXIT_SUCCESS;
 }

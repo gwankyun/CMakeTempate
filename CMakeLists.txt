@@ -67,8 +67,21 @@ if(SPDLOG_EASY_FOUND)
 	message("found")
 endif()
 
+set(BOOST_ROOT C:/local/boost_1_71_0)
+
+set(CMAKE_FIND_LIBRARY_PREFIXES lib)
+
+find_package(Boost COMPONENTS filesystem REQUIRED)
+
+if(Boost_FOUND)
+    message( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
+    message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
+    message( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+endif()
+
 set(inc_dir
 	${SPDLOG_EASY_INCLUDE_DIR}
+	${Boost_INCLUDE_DIRS}
 )
 
 foreach(item ${dir_list})
@@ -104,7 +117,7 @@ foreach(item ${dir_list})
 	file(GLOB src ${item}/${proj}.*)
 	list(REMOVE_ITEM lib ${proj})
 
-	target_link_libraries(${proj} ${lib})
+	target_link_libraries(${proj} ${lib} Boost::filesystem)
 	target_sources(${proj} PRIVATE ${src})
 	target_include_directories(${proj} PRIVATE ${inc_dir})
 
@@ -141,5 +154,5 @@ endforeach()
 # set_target_properties(${EXE} PROPERTIES DEBUG_POSTFIX "_debug")
 
 if(${MSVC})
-	add_definitions(/W4 /MP)
+	add_definitions(/W4 /MP /MDd)
 endif()
