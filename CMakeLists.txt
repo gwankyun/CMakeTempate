@@ -67,7 +67,6 @@ foreach(item ${target_list})
 	get_target_property(folder ${item} FOLDER)
 	if(folder)
 		cmake_print_variables(folder)
-		# target_link_libraries(${item} ${lib})
 	endif()
 
 	message("")
