@@ -60,7 +60,7 @@ foreach(item ${target_list})
 
 	get_target_property(lib ${item} LIB)
 	if(lib)
-		cmake_print_variables(inc)
+		cmake_print_variables(lib)
 		target_link_libraries(${item} ${lib})
 	endif()
 
