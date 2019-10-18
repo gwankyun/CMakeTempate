@@ -8,6 +8,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(common)
 include(map)
+include(CMakePrintHelpers)
 
 # 輸出目錄
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -19,135 +20,57 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 # 項目名
 project(CMakeTemplate)
 
-# 可執行文件名
-set(EXE main)
-
+# 源目錄
 set(MAIN_DIR src)
+
+# 可執行文件名
 set(MAIN_FILE main)
 
-function(get_filename_component_list _var _FileNameList _mode)
-	set(out)
-	foreach(item ${_FileNameList})
-		get_filename_component(result ${item} ${_mode})
-		list(APPEND out ${result})
-	endforeach()
-	set(${_var} ${out} PARENT_SCOPE)
-endfunction()
-
-function(string_regex_replace_all _regular _replace _output _input)
-	set(r TRUE)
-	while(${r})
-		string(REGEX REPLACE ${_regular} ${_replace} out ${input})
-		string(COMPARE NOTEQUAL ${_input} ${out} r)
-		set(_input ${out})
-	endwhile()
-	set(${_output} ${out} PARENT_SCOPE)
-endfunction()
-
-function(update_folder _folder _var)
-	if(${MSVC_VERSION} GREATER_EQUAL 1920)
-		set(${_var} ${_folder} PARENT_SCOPE)
-	else()
-		string(REGEX REPLACE "^([a-z]+)/" "\\1_/" _folder ${_folder})
-		string(REGEX REPLACE "/([a-z]+)$" "/\\1_" _folder ${_folder})
-		string_regex_replace_all("/([a-z]+)/" "/\\1_/" out ${_folder})
-		set(_folder ${out})
-		set(${_var} ${_folder} PARENT_SCOPE)
-	endif()
-endfunction()
-
-set(project_list)
-file(GLOB_RECURSE project_list src/*)
-get_filename_component_list(dir_list "${project_list}" DIRECTORY)
-list(REMOVE_DUPLICATES dir_list)
-
 find_package(SPDLOG_EASY)
-
 if(SPDLOG_EASY_FOUND)
-	message("found")
+	cmake_print_variables(SPDLOG_EASY_FOUND)	
 endif()
-
-set(BOOST_ROOT C:/local/boost_1_71_0)
 
 set(CMAKE_FIND_LIBRARY_PREFIXES lib)
-
+set(BOOST_ROOT C:/local/boost_1_71_0)
 find_package(Boost COMPONENTS filesystem REQUIRED)
-
 if(Boost_FOUND)
-    message( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
-    message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
-    message( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+	cmake_print_variables(Boost_INCLUDE_DIRS)	
+	cmake_print_variables(Boost_LIBRARIES)	
+	cmake_print_variables(Boost_LIB_VERSION)	
 endif()
 
+# 引用目錄
 set(inc_dir
 	${SPDLOG_EASY_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
 )
 
-foreach(item ${dir_list})
-	message(${item})
-	file(GLOB current ${item}/* ${item}/*.cpp)
-	set(name)
-	get_filename_component(name ${item} NAME)
-	message("name: " ${name})
-	message(" ${current}")
-	set(lib)
-	get_filename_component_list(lib " ${current}" NAME_WE)
-	list(REMOVE_DUPLICATES lib)
-	set(proj)
-	set(src)
-	list(FIND lib main out)
-	if(NOT (${out} EQUAL -1))
-		set(proj main)
-		message(" main")
-		add_executable(${proj} "")
-	else()
-		set(proj ${name})
-		message(" sub")
-		add_library(${proj} "")
+set(target_list)
+get_target_list(target_list ${MAIN_DIR} ${MAIN_FILE})
 
-		string(REGEX MATCH "(${MAIN_DIR}/.*)${proj}.*$" _ ${item})
-		set(folder ${CMAKE_MATCH_1})
-		update_folder(${folder} folder)
-		message(" folder: " ${folder})
-		set_property(TARGET ${proj} PROPERTY FOLDER ${folder})
+foreach(item ${target_list})
+	cmake_print_variables(item)
+
+	get_target_property(src ${item} SRC)
+	cmake_print_variables(src)
+	target_sources(${item} PRIVATE ${src})
+
+	target_include_directories(${item} PRIVATE ${inc_dir})
+
+	get_target_property(lib ${item} LIB)
+	if(lib)
+		cmake_print_variables(inc)
+		target_link_libraries(${item} ${lib})
 	endif()
 
-	list(REMOVE_ITEM lib ${proj})
-	file(GLOB src ${item}/${proj}.*)
-	list(REMOVE_ITEM lib ${proj})
+	get_target_property(folder ${item} FOLDER)
+	if(folder)
+		cmake_print_variables(folder)
+		# target_link_libraries(${item} ${lib})
+	endif()
 
-	target_link_libraries(${proj} ${lib} Boost::filesystem)
-	target_sources(${proj} PRIVATE ${src})
-	target_include_directories(${proj} PRIVATE ${inc_dir})
-
-	message(" lib: ${lib}")
-
-	foreach(i ${lib})
-		if(NOT (IS_DIRECTORY ${item}/${i}))
-			set(proj ${i})
-			message(" standone lib: " ${i})
-			add_library(${proj} "")
-			file(GLOB src ${item}/${proj}.*)
-
-			set(folder)
-			if(${name} STREQUAL ${MAIN_DIR})
-				if(${MSVC_VERSION} GREATER_EQUAL 1920)
-					set(folder ${name})
-				else()
-					set(folder ${name}_)
-				endif()
-			else()
-				string(REGEX MATCH "(${MAIN_DIR}/.*)$" _ ${item})
-				set(folder ${CMAKE_MATCH_1})
-				update_folder(${folder} folder)
-			endif()
-
-			target_sources(${proj} PRIVATE ${src})
-			target_include_directories(${proj} PRIVATE ${inc_dir})
-			set_property(TARGET ${proj} PROPERTY FOLDER ${folder})
-		endif()
-	endforeach()
+	message("")
 endforeach()
 
 # 調試版本後綴名
